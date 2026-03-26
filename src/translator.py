@@ -1,34 +1,85 @@
-def translate_content(content: str) -> tuple[bool, str]:
-    if content == "这是一条中文消息":
-        return False, "This is a Chinese message"
-    if content == "Ceci est un message en français":
-        return False, "This is a French message"
-    if content == "Esta es un mensaje en español":
-        return False, "This is a Spanish message"
-    if content == "Esta é uma mensagem em português":
-        return False, "This is a Portuguese message"
-    if content  == "これは日本語のメッセージです":
-        return False, "This is a Japanese message"
-    if content == "이것은 한국어 메시지입니다":
-        return False, "This is a Korean message"
-    if content == "Dies ist eine Nachricht auf Deutsch":
-        return False, "This is a German message"
-    if content == "Questo è un messaggio in italiano":
-        return False, "This is an Italian message"
-    if content == "Это сообщение на русском":
-        return False, "This is a Russian message"
-    if content == "هذه رسالة باللغة العربية":
-        return False, "This is an Arabic message"
-    if content == "यह हिंदी में संदेश है":
-        return False, "This is a Hindi message"
-    if content == "นี่คือข้อความภาษาไทย":
-        return False, "This is a Thai message"
-    if content == "Bu bir Türkçe mesajdır":
-        return False, "This is a Turkish message"
-    if content == "Đây là một tin nhắn bằng tiếng Việt":
-        return False, "This is a Vietnamese message"
-    if content == "Esto es un mensaje en catalán":
-        return False, "This is a Catalan message"
-    if content == "This is an English message":
-        return True, "This is an English message"
-    return True, content
+import os
+# Use Ollama library to interact with model:
+from ollama import chat, ChatResponse, Client
+import subprocess
+
+# process = subprocess.Popen(['ollama', 'serve'])
+
+# Get OLLAMA_HOST, if specified, or default to localhost:11434.
+MODEL_NAME = "mistral:7b"
+OLLAMA_URL = os.getenv("OLLAMA_HOST", "localhost:11434")
+
+client = Client(host=OLLAMA_URL)
+
+
+# TODO: Implement Basic LLM integration
+def get_language(post: str) -> str:
+    context = """You are a language classifier. Detect the language of the input text and reply only with the English name of that language.
+              Example:
+              INPUT: Bonjour, je m'appelle Bob
+              OUTPUT: French
+
+              INPUT: Können Sie mir bitte helfen?
+              OUTPUT: German
+
+              INPUT: Hello, how are you?
+              OUTPUT: English
+              """
+    response = client.chat(
+        model=MODEL_NAME,
+        messages=[
+            {
+                "role": "system",
+                "content": context
+            },
+            {
+                "role": "user",
+                "content": post
+            }
+        ]
+    )
+    return response.message.content
+
+# TODO: Implement Basic LLM integration
+def get_translation(post: str) -> str:
+    context = """You are a translator. Translate the input text into English. If the input text is already in english, please return the text as-is
+              Reply only with the translated text and nothing else.
+
+              Example:
+              INPUT: Bonjour, je m'appelle Bob
+              OUTPUT: Hello, my name is Bob
+
+              INPUT: Können Sie mir bitte helfen?
+              OUTPUT: Can you please help me?
+              """
+    response = client.chat(
+        model=MODEL_NAME,
+        messages=[
+            {
+                "role": "system",
+                "content": context
+            },
+            {
+                "role": "user",
+                "content": post
+            }
+        ]
+    )
+    return response.message.content.strip()
+
+def translate_content(post: str) -> tuple[bool, str]:
+    """
+    Calls get_language to detect the post language.
+    If English (or unrecognisable), returns (True, original_post).
+    Otherwise calls get_translation and returns (False, translated_post).
+    Never raises an exception for any textual input.
+    """
+    detected_language = get_language(post).strip()
+
+    if detected_language.lower() == "english":
+        return (True, post)
+
+    translated = get_translation(post)
+    return (False, translated)
+
+
