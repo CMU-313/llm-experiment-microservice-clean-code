@@ -7,7 +7,11 @@ def test_chinese():
     assert translated_content == "This is a Chinese message"
 
 def test_llm_normal_response():
-    pass
+    is_english, translated_content = translate_content("This is an English message")
+    assert is_english
+    assert translated_content=="This is an English message"
 
 def test_llm_gibberish_response():
-    pass
+    is_english, translated_content = translate_content("😀🎉🤔💡🚀")
+    assert is_english
+    assert translated_content=="😀🎉🤔💡🚀"
