@@ -74,12 +74,14 @@ def translate_content(post: str) -> tuple[bool, str]:
     Otherwise calls get_translation and returns (False, translated_post).
     Never raises an exception for any textual input.
     """
-    detected_language = get_language(post).strip()
+    try:
+        detected_language = get_language(post).strip()
 
-    if detected_language.lower() == "english":
+        if detected_language.lower() == "english":
+            return (True, post)
+
+        translated = get_translation(post)
+        return (False, translated)
+    except Exception as _:
         return (True, post)
-
-    translated = get_translation(post)
-    return (False, translated)
-
 
